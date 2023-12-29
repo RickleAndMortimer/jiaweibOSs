@@ -3,7 +3,6 @@
 #include <stdbool.h>
 #include "limine.h"
 #include "idt/idt.h"
-#include "terminal/terminal.h"
 #include "mem/linked_list_allocator.h"
 
 #include <flanterm/flanterm.h>
