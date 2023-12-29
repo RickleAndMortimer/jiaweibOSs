@@ -73,13 +73,15 @@ void _start(void) {
     uint64_t offset = hhdm_request.response->offset;
 
     linked_list_allocator_t* allocator = (linked_list_allocator_t*) offset + used_entry->base;
-    initialize_linked_list_allocator(allocator, 4096, allocator + 1, 32);
+    size_t free_list[30];
+    initialize_linked_list_allocator(allocator, 30, allocator + 1, 32, free_list);
 
-    char* c = allocator->allocator.malloc((physical_memory_allocator_t*) allocator, 24);
+    allocator->allocator.malloc((physical_memory_allocator_t*) allocator, 24);
     char* g = allocator->allocator.malloc((physical_memory_allocator_t*) allocator, 28);
+    g[0] = 'g';
+    allocator->allocator.malloc((physical_memory_allocator_t*) allocator, 28);
 
-    c[0] = 'h';
-    g[1] = 'k';
+    allocator->allocator.free((physical_memory_allocator_t*) allocator, g);
 
     struct limine_framebuffer* framebuffer = framebuffer_request.response->framebuffers[0];
     
