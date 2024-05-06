@@ -6,7 +6,7 @@
 
 idt_entry_t idt_entries[256];
 
-extern void isr_common_stub();
+extern "C" void isr_common_stub();
 
 idtr_t idtr = {
 	(uint16_t) sizeof(idt_entries) - 1,

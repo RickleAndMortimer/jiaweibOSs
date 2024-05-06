@@ -21,6 +21,8 @@ endef
 override DEFAULT_CC := cc
 $(eval $(call DEFAULT_VAR,CC,$(DEFAULT_CC)))
 
+override CCPP := g++
+
 # Same thing for "ld" (the linker).
 override DEFAULT_LD := ld 
 $(eval $(call DEFAULT_VAR,LD,$(DEFAULT_LD)))
@@ -36,7 +38,6 @@ $(eval $(call DEFAULT_VAR,CPPFLAGS,$(DEFAULT_CPPFLAGS)))
 # User controllable nasm flags.
 override DEFAULT_NASMFLAGS := -F dwarf -g
 $(eval $(call DEFAULT_VAR,NASMFLAGS,$(DEFAULT_NASMFLAGS)))
-
 # User controllable linker flags. We set none by default.
 override DEFAULT_LDFLAGS :=
 $(eval $(call DEFAULT_VAR,LDFLAGS,$(DEFAULT_LDFLAGS)))
@@ -49,6 +50,25 @@ override CFLAGS += \
     -ffreestanding \
     -fno-stack-protector \
     -fno-stack-check \
+    -fno-lto \
+    -fPIE \
+    -m64 \
+    -march=x86-64 \
+    -mno-80387 \
+    -mno-mmx \
+    -mno-sse \
+    -mno-sse2 \
+    -mno-red-zone
+
+# Internal C flags that should not be changed by the user.
+override CPPPFLAGS += \
+    -Wall \
+    -Wextra \
+    -ffreestanding \
+    -fno-stack-protector \
+    -fno-stack-check \
+    -fno-exceptions \
+    -fno-rtti \
     -fno-lto \
     -fPIE \
     -m64 \
@@ -85,10 +105,11 @@ override NASMFLAGS += \
 # Use "find" to glob all *.c, *.S, and *.asm files in the tree and obtain the
 # object and header dependency file names.
 override CFILES := $(shell cd . && find -L * -type f -name '*.c')
+override CPPFILES := $(shell cd . && find -L * -type f -name '*.cpp')
 override ASFILES := $(shell cd . && find -L * -type f -name '*.S')
 override NASMFILES := $(shell cd . && find -L * -type f -name '*.asm')
-override OBJ := $(addprefix obj/,$(CFILES:.c=.c.o) $(ASFILES:.S=.S.o) $(NASMFILES:.asm=.asm.o))
-override HEADER_DEPS := $(addprefix obj/,$(CFILES:.c=.c.d) $(ASFILES:.S=.S.d))
+override OBJ := $(addprefix obj/,$(CFILES:.c=.c.o) $(CPPFILES:.cpp=.cpp.o) $(ASFILES:.S=.S.o) $(NASMFILES:.asm=.asm.o))
+override HEADER_DEPS := $(addprefix obj/,$(CFILES:.c=.c.d) $(CPPFILES:.cpp=.cpp.d) $(ASFILES:.S=.S.d))
 
 # Default target.
 .PHONY: all
@@ -109,9 +130,14 @@ bin/$(KERNEL): GNUmakefile linker.ld $(OBJ)
 -include $(HEADER_DEPS)
 
 # Compilation rules for *.c files.
-obj/%.c.o: %.c GNUmakefile kernel/limine.h flanterm/flanterm.h
+obj/%.c.o: %.c GNUmakefile 
 	mkdir -p "$$(dirname $@)"
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
+
+# Compilation rules for *.cpp files.
+obj/%.cpp.o: %.cpp GNUmakefile kernel/limine.h flanterm/flanterm.h
+	mkdir -p "$$(dirname $@)"
+	$(CCPP) -g -O2 -pipe -Isys/ -Ilib/ -Ikernel/ -Iflanterm/ $(CPPPPFLAGS) $(CPPFLAGS) -c $< -o $@
 
 # Compilation rules for *.S files.
 obj/%.S.o: %.S GNUmakefile
