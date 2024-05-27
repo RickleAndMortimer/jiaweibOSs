@@ -9,6 +9,7 @@
 #include "drivers/pic.h"
 #include "gfx/term.h"
 #include "mem/linked_list_allocator.h"
+#include "mem/page_heap.h"
 
 #include <flanterm/flanterm.h>
 #include <flanterm/backends/fb.h>
@@ -114,6 +115,7 @@ void _start(void) {
 
     uint64_t offset = hhdm_request.response->offset;
 
+    /*
     linked_list_allocator_t* allocator = (linked_list_allocator_t*) offset + used_entry->base;
     size_t free_list[30];
     initialize_linked_list_allocator(allocator, 30, allocator + 1, 32, free_list);
@@ -122,8 +124,9 @@ void _start(void) {
     char* g = allocator->allocator.malloc((physical_memory_allocator_t*) allocator, 28);
     g[0] = 'g';
     allocator->allocator.malloc((physical_memory_allocator_t*) allocator, 28);
+    */
 
-    allocator->allocator.free((physical_memory_allocator_t*) allocator, g);
+    initialize_page_heap(offset + used_entry->base, used_entry->length);
 
     struct limine_framebuffer* framebuffer = framebuffer_request.response->framebuffers[0];
     
