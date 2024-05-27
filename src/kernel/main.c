@@ -13,6 +13,7 @@
 
 #include <flanterm/flanterm.h>
 #include <flanterm/backends/fb.h>
+#include <printf/printf.h>
 
 __attribute__((used, section(".requests")))
 static volatile LIMINE_BASE_REVISION(2);
@@ -136,10 +137,10 @@ void _start(void) {
         fb_ptr[500 + i * (framebuffer->pitch / 4) + i] = 0xff0000;
     }
 
-    // struct flanterm_context *ft_ctx = initialize_terminal(framebuffer);
+    struct flanterm_context *ft_ctx = initialize_terminal(framebuffer);
     
     struct limine_smp_response *cpus = smp_request.response;
-    cpus->cpus[1]->goto_address = cpu2_test;
+    // cpus->cpus[1]->goto_address = cpu2_test;
 
     // remap_pic(0x20, 0x28);
     // clear_mask_for_irq(0);
@@ -152,7 +153,8 @@ void _start(void) {
     asm volatile ("int $12;");
 
     const char msg[] = "Hello world\n";
-    // ftprint(ft_ctx, msg, sizeof(msg));
+    ftprint(ft_ctx, msg, sizeof(msg));
+    printf("ayo %d", 50);
 
     // We're done, just hang...
     hcf();

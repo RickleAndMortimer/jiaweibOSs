@@ -26,7 +26,7 @@ override DEFAULT_LD := ld
 $(eval $(call DEFAULT_VAR,LD,$(DEFAULT_LD)))
 
 # User controllable C flags.
-override DEFAULT_CFLAGS := -g -O2 -pipe -Isys/ -Ilib/ -Ikernel/ -Iflanterm/
+override DEFAULT_CFLAGS := -g -O2 -pipe -Isys/ -Ilib/ -Ikernel/ -Iflanterm/ -Iprintf/ -DPRINTF_DISABLE_SUPPORT_FLOAT
 $(eval $(call DEFAULT_VAR,CFLAGS,$(DEFAULT_CFLAGS)))
 
 # User controllable C preprocessor flags. We set none by default.
@@ -92,7 +92,7 @@ override HEADER_DEPS := $(addprefix obj/,$(CFILES:.c=.c.d) $(ASFILES:.S=.S.d))
 
 # Default target.
 .PHONY: all
-all: bin/$(KERNEL)
+all: bin/$(KERNEL) 
 
 kernel/limine.h:
 	curl -Lo $@ https://github.com/limine-bootloader/limine/raw/trunk/limine.h
@@ -100,8 +100,11 @@ kernel/limine.h:
 flanterm/flanterm.h:
 	git clone https://github.com/mintsuki/flanterm.git
 
+printf/printf.h:
+	git clone https://github.com/mpaland/printf.git
+
 # Link rules for the final kernel executable.
-bin/$(KERNEL): GNUmakefile linker.ld $(OBJ)
+bin/$(KERNEL): GNUmakefile linker.ld $(OBJ) kernel/limine.h flanterm/flanterm.h printf/printf.h
 	mkdir -p "$$(dirname $@)"
 	$(LD) $(OBJ) $(LDFLAGS) -o $@
 
@@ -109,7 +112,7 @@ bin/$(KERNEL): GNUmakefile linker.ld $(OBJ)
 -include $(HEADER_DEPS)
 
 # Compilation rules for *.c files.
-obj/%.c.o: %.c GNUmakefile kernel/limine.h flanterm/flanterm.h 
+obj/%.c.o: %.c GNUmakefile 
 	mkdir -p "$$(dirname $@)"
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
@@ -126,8 +129,8 @@ obj/%.asm.o: %.asm GNUmakefile
 # Remove object files and the final executable.
 .PHONY: clean
 clean:
-	rm -rf bin obj
+	rm -rf bin obj 
 
 .PHONY: distclean
 distclean: clean
-	rm -f limine.h
+	rm -rf limine.h flanterm printf

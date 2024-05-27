@@ -30,5 +30,8 @@ void ftprint(struct flanterm_context* ft_ctx, const char* msg, size_t len) {
 }
 
 void _putchar(char character) {
-    ft_ctx->raw_putchar(ft_ctx, character);
+    char msg[2];
+    msg[0] = character;
+    msg[1] = '\0';
+    flanterm_write(ft_ctx, msg, 2);
 }
