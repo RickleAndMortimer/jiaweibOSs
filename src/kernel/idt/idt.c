@@ -6,7 +6,8 @@
 
 idt_entry_t idt_entries[256];
 
-extern void isr_common_stub();
+extern void* isr_stub_table[];
+extern void* irq_stub_table[];
 
 idtr_t idtr = {
 	(uint16_t) sizeof(idt_entries) - 1,
@@ -19,7 +20,11 @@ void load_idtr(idtr_t* idtr) {
 
 void load_exceptions() {
 	for (uint8_t i = 0; i < 32; i++) {
-		set_idt_entry(&idt_entries[i], (uint64_t) isr_common_stub, GDT_KERNEL_CODE_SELECTOR, 0, 0x8E);
+		set_idt_entry(&idt_entries[i], (uint64_t) isr_stub_table[i], GDT_KERNEL_CODE_SELECTOR, 0, 0x8E);
+	}
+
+	for (uint8_t i = 32; i < 255; i++) {
+		set_idt_entry(&idt_entries[i], (uint64_t) irq_stub_table[i - 32], GDT_KERNEL_CODE_SELECTOR, 0, 0x8E);
 	}
 }
 
