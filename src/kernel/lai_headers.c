@@ -1,4 +1,6 @@
 #include "lai_headers.h"
+#include <printf/printf.h>
+#include <sys/io.h>
 
 void* laihost_malloc(size_t bytes) {
     malloc(bytes);
@@ -13,26 +15,42 @@ void* laihost_realloc(void* address, size_t length) {
     return address;
 }
 
-// TODO implement
+// TODO: Implement
+void* laihost_map(size_t address, size_t count);
+void laihost_unmap(void* pointer, size_t count);
+void* laihost_scan(char* sig, size_t index);
+
 void laihost_log(int level, const char *msg) {
-
+    printf("[LAI]: Level %d, %s", level, msg);
 }
 
-// TODO implement
 __attribute__((noreturn)) void laihost_panic(const char *msg) {
-
+    printf("[LAI]: Kernel Panic! %s", msg);
 }
 
+void laihost_outb(uint16_t port, uint8_t val) {
+    outb(port, val);
+}
 
-// TODO implement
-void laihost_outb(uint16_t port, uint8_t val);
-void laihost_outw(uint16_t port, uint16_t val);
-void laihost_outd(uint16_t port, uint32_t val);
+void laihost_outw(uint16_t port, uint16_t val) {
+    outw(port, val);
+}
 
-// TODO implement
-uint8_t laihost_inb(uint16_t port);
-uint16_t laihost_inw(uint16_t port);
-uint32_t laihost_ind(uint16_t port);
+void laihost_outd(uint16_t port, uint32_t val) {
+    outl(port, val);
+}
+
+uint8_t laihost_inb(uint16_t port) {
+    inb(port);
+}
+
+uint16_t laihost_inw(uint16_t port) {
+    inw(port);
+}
+
+uint32_t laihost_ind(uint16_t port) {
+    inl(port);
+}
 
 // TODO implement
 uint8_t laihost_pci_readb(uint16_t seg, uint8_t bus, uint8_t slot, uint8_t fun, uint16_t offset);

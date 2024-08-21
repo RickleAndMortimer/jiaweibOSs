@@ -104,7 +104,7 @@ printf/printf.h:
 	git clone https://github.com/mpaland/printf.git
 
 # Link rules for the final kernel executable.
-bin/$(KERNEL): GNUmakefile linker.ld $(OBJ) kernel/limine.h flanterm/flanterm.h printf/printf.h
+bin/$(KERNEL): GNUmakefile linker.ld kernel/limine.h flanterm/flanterm.h printf/printf.h $(OBJ) 
 	mkdir -p "$$(dirname $@)"
 	$(LD) $(OBJ) $(LDFLAGS) -o $@
 
