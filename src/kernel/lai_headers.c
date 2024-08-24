@@ -1,9 +1,10 @@
 #include "lai_headers.h"
+#include "mem/paging.h"
 #include <printf/printf.h>
 #include <sys/io.h>
 
 void* laihost_malloc(size_t bytes) {
-    malloc(bytes);
+    return malloc(bytes);
 }
 
 void laihost_free(void* address) {
@@ -12,13 +13,17 @@ void laihost_free(void* address) {
 
 // TODO replace this with an actual realloc implementation
 void* laihost_realloc(void* address, size_t length) {
-    return address;
+  return malloc(length);
 }
 
 // TODO: Implement
-void* laihost_map(size_t address, size_t count);
-void laihost_unmap(void* pointer, size_t count);
-void* laihost_scan(char* sig, size_t index);
+void* laihost_map(size_t address, size_t count) {
+  return map_page(address, address, count);
+}
+
+void laihost_unmap(void* pointer, size_t count) {
+  unmap_page(pointer, pointer, count);
+}
 
 void laihost_log(int level, const char *msg) {
     printf("[LAI]: Level %d, %s", level, msg);
@@ -51,6 +56,9 @@ uint16_t laihost_inw(uint16_t port) {
 uint32_t laihost_ind(uint16_t port) {
     inl(port);
 }
+
+
+void* laihost_scan(char* sig, size_t index);
 
 // TODO implement
 uint8_t laihost_pci_readb(uint16_t seg, uint8_t bus, uint8_t slot, uint8_t fun, uint16_t offset);

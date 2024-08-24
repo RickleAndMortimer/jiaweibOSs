@@ -32,9 +32,13 @@ typedef struct page_table_t {
 
 static page_table_t* pml4;
 
-page_table_t* initPML4(void); 
+page_table_t* init_pml4(void); 
 void* get_phys_addr(void* virtual_addr);
 void map_page(void* virtual_address, void* physical_address, uint8_t flags);
 void unmap_page(void* virtual_address, void* physical_address, uint8_t flags);
+void set_page_table_entry(page_entry_t* entry, uint8_t flags, uintptr_t physical_address, uint16_t available);
+void set_cr3(size_t page_table_addr);
+page_table_t* get_pml4();
+uint64_t read_cr3(void);
 
 #endif

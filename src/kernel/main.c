@@ -108,10 +108,10 @@ void _start(void) {
     struct limine_memmap_entry* used_entry;
 
     for (size_t i = 0; i < memmap_request.response->entry_count; i++) {
-	if (entries[i]->type == LIMINE_MEMMAP_USABLE) {
-	    used_entry = entries[i];
-	    break;
-	}
+	    if (entries[i]->type == LIMINE_MEMMAP_USABLE) {
+	      used_entry = entries[i];
+	      break;
+	    }
     }
 
     uint64_t offset = hhdm_request.response->offset;
