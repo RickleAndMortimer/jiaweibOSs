@@ -94,6 +94,11 @@ override HEADER_DEPS := $(addprefix obj/,$(CFILES:.c=.c.d) $(ASFILES:.S=.S.d))
 .PHONY: all
 all: bin/$(KERNEL) 
 
+# Link rules for the final kernel executable.
+bin/$(KERNEL): GNUmakefile linker.ld kernel/limine.h flanterm/flanterm.h printf/printf.h $(OBJ) 
+	mkdir -p "$$(dirname $@)"
+	$(LD) $(OBJ) $(LDFLAGS) -o $@
+
 kernel/limine.h:
 	curl -Lo $@ https://github.com/limine-bootloader/limine/raw/trunk/limine.h
 
@@ -103,26 +108,21 @@ flanterm/flanterm.h:
 printf/printf.h:
 	git clone https://github.com/mpaland/printf.git
 
-# Link rules for the final kernel executable.
-bin/$(KERNEL): GNUmakefile linker.ld kernel/limine.h flanterm/flanterm.h printf/printf.h $(OBJ) 
-	mkdir -p "$$(dirname $@)"
-	$(LD) $(OBJ) $(LDFLAGS) -o $@
-
 # Include header dependencies.
 -include $(HEADER_DEPS)
 
 # Compilation rules for *.c files.
-obj/%.c.o: %.c GNUmakefile 
+obj/%.c.o: %.c GNUmakefile kernel/limine.h flanterm/flanterm.h printf/printf.h 
 	mkdir -p "$$(dirname $@)"
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 # Compilation rules for *.S files.
-obj/%.S.o: %.S GNUmakefile
+obj/%.S.o: %.S GNUmakefile kernel/limine.h flanterm/flanterm.h printf/printf.h 
 	mkdir -p "$$(dirname $@)"
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 # Compilation rules for *.asm (nasm) files.
-obj/%.asm.o: %.asm GNUmakefile
+obj/%.asm.o: %.asm GNUmakefile kernel/limine.h flanterm/flanterm.h printf/printf.h 
 	mkdir -p "$$(dirname $@)"
 	nasm $(NASMFLAGS) $< -o $@
 

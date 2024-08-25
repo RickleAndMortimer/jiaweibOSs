@@ -33,6 +33,10 @@ all-hdd: $(IMAGE_NAME).hdd
 
 .PHONY: run
 run: $(IMAGE_NAME).iso
+	qemu-system-x86_64 -M q35 -m 2G -smp 2 -cdrom $(IMAGE_NAME).iso -boot d
+
+.PHONY: debug
+debug: $(IMAGE_NAME).iso
 	qemu-system-x86_64 -M q35 -s -S -m 2G -smp 2 -cdrom $(IMAGE_NAME).iso -boot d
 
 .PHONY: run-uefi

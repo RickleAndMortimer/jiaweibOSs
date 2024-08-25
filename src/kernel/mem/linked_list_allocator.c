@@ -41,3 +41,7 @@ void initialize_linked_list_allocator(linked_list_allocator_t* allocator_ptr, si
 
 	free_list[capacity - 1] = 0;	
 }
+
+void initialize_linked_list_allocator_aligned(void* base, size_t capacity, size_t block_length) {
+	initialize_linked_list_allocator(base, capacity, base + sizeof(linked_list_allocator_t) + sizeof(size_t) * capacity, block_length, base + sizeof(linked_list_allocator_t));
+}

@@ -18,7 +18,6 @@ void* laihost_realloc(void* address, size_t length) {
 
 // TODO: Implement
 void* laihost_map(size_t address, size_t count) {
-  return map_page(address, address, count);
 }
 
 void laihost_unmap(void* pointer, size_t count) {
