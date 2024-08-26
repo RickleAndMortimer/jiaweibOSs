@@ -7,13 +7,23 @@
 #include "drivers/pit.h"
 #include "drivers/pic.h"
 #include "gfx/term.h"
+#include "sys/halt.h"
 #include "mem/linked_list_allocator.h"
 #include "mem/page_heap.h"
 #include "mem/heap.h"
 
 #include <flanterm/flanterm.h>
 #include <flanterm/backends/fb.h>
+#include <lai/helpers/pm.h>
 #include <printf/printf.h>
+
+typedef struct rsdp_t {
+ char signature[8];
+ uint8_t Checksum;
+ char oemid[6];
+ uint8_t revision;
+ uint32_t rsdt_address;
+}__attribute__ ((packed)) rsdp_t;
 
 __attribute__((used, section(".requests")))
 static volatile LIMINE_BASE_REVISION(2);
@@ -49,6 +59,12 @@ static volatile struct limine_stack_size_request stack_size_request = {
     .stack_size = 0x100000
 };
 
+__attribute__((used, section(".requests")))
+static volatile struct limine_rsdp_request rsdp_request = {
+    .id = LIMINE_RSDP_REQUEST,
+    .revision = 0
+};
+
 __attribute__((used, section(".requests_start_marker")))
 static volatile LIMINE_REQUESTS_START_MARKER;
 
@@ -68,17 +84,7 @@ static void cpu2_test(void) {
     const char msg[] = "Hello from cpu2!\n";
     // ftprint(ft_ctx, msg, sizeof(msg));
 
-    for (;;) {
-        asm ("hlt;");
-    }
-}
-
-
-// Halt and catch fire function.
-static void hcf(void) {
-    for (;;) {
-        asm ("hlt;");
-    }
+    hcf();
 }
 
 void _start(void) {
@@ -102,7 +108,10 @@ void _start(void) {
         hcf();
     }
 
-    // Fetch the first framebuffer.
+    // Access SMP information.
+    if (rsdp_request.response == NULL) {
+        hcf();
+    }
 
     struct limine_memmap_entry** entries = memmap_request.response->entries;
     struct limine_memmap_entry* used_entry;
@@ -125,6 +134,11 @@ void _start(void) {
     linked_list_free(x);
     x = linked_list_heap_fast_malloc(24);
     strcpy(x, "bello");
+
+    // Get rsdp address
+    rsdp_t* rsdp = rsdp_request.response->address;
+
+    // Fetch the first framebuffer.
     struct limine_framebuffer* framebuffer = framebuffer_request.response->framebuffers[0];
     
     // Note: we assume the framebuffer model is RGB with 32-bit pixels.
@@ -138,11 +152,11 @@ void _start(void) {
     struct limine_smp_response *cpus = smp_request.response;
     // cpus->cpus[1]->goto_address = cpu2_test;
 
-    // remap_pic(0x20, 0x28);
-    // clear_mask_for_irq(0);
+    remap_pic(0x20, 0x28);
+    clear_mask_for_irq(0);
     init_idt();
     enable_interrupts();
-    // init_pit(50000);
+    init_pit(50000);
 
     asm volatile ("int $10;");
     asm volatile ("int $11;");
@@ -151,6 +165,9 @@ void _start(void) {
     const char msg[] = "Hello world\n";
     ftprint(ft_ctx, msg, sizeof(msg));
     printf("ayo %d", 50);
+
+    lai_set_acpi_revision(rsdp->revision);
+    lai_create_namespace();
 
     // We're done, just hang...
     hcf();

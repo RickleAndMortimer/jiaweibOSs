@@ -1,0 +1,2 @@
+
+static void hcf(void);

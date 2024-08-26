@@ -90,6 +90,13 @@ void initialize_default_request_heap_sizes(void* base) {
   initialize_linked_list_heap(requests, sizeof(requests) / sizeof(linked_list_heap_request_t), base);
 } 
 
+void* realloc(void* address, size_t bytes) {
+    void* new_address = linked_list_heap_fast_malloc(bytes);
+    memcpy(new_address, address, bytes);
+    linked_list_heap_free(address);
+    return new_address;
+}
+
 void* malloc(size_t bytes) {
     return linked_list_heap_fast_malloc(bytes);
 }

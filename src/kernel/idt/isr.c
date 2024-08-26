@@ -1,14 +1,13 @@
 #include "isr.h"
-#include "../gfx/term.h"
+#include <printf/printf.h>
 
 void (*interrupt_handlers[256]) (interrupt_frame_t* frame);
 
 void exception_handler(interrupt_frame_t* frame) {
-	kprint("Handling an exception\n", 23);
+	printf("Handling an exception\n");
 }
 
 void irq_handler(interrupt_frame_t* frame) {
-	kprint("Handling an IRQ call\n", 24);
 	interrupt_handlers[frame->int_no](frame);
 }
 

@@ -1,7 +1,9 @@
 #include "lai_headers.h"
 #include "mem/paging.h"
+#include "mem/heap.h"
 #include <printf/printf.h>
 #include <sys/io.h>
+#include <sys/halt.h>
 
 void* laihost_malloc(size_t bytes) {
     return malloc(bytes);
@@ -13,7 +15,7 @@ void laihost_free(void* address) {
 
 // TODO replace this with an actual realloc implementation
 void* laihost_realloc(void* address, size_t length) {
-  return malloc(length);
+    realloc(address, length);
 }
 
 // TODO: Implement
@@ -30,6 +32,7 @@ void laihost_log(int level, const char *msg) {
 
 __attribute__((noreturn)) void laihost_panic(const char *msg) {
     printf("[LAI]: Kernel Panic! %s", msg);
+    hcf();
 }
 
 void laihost_outb(uint16_t port, uint8_t val) {

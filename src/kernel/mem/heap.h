@@ -11,4 +11,5 @@ void* linked_list_heap_fast_malloc(size_t length);
 void initialize_default_request_heap_sizes(void* base);
 
 void* malloc(size_t bytes);
+void* realloc(void* address, size_t length);
 void free(void* address);

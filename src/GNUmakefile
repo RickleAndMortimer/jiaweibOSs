@@ -26,7 +26,7 @@ override DEFAULT_LD := ld
 $(eval $(call DEFAULT_VAR,LD,$(DEFAULT_LD)))
 
 # User controllable C flags.
-override DEFAULT_CFLAGS := -g -O2 -pipe -Isys/ -Ilib/ -Ikernel/ -Iflanterm/ -Iprintf/ -DPRINTF_DISABLE_SUPPORT_FLOAT
+override DEFAULT_CFLAGS := -g -O2 -pipe -Isys/ -Ilib/ -Ikernel/ -Iflanterm/ -Iprintf/ -Ilai/include -DPRINTF_DISABLE_SUPPORT_FLOAT
 $(eval $(call DEFAULT_VAR,CFLAGS,$(DEFAULT_CFLAGS)))
 
 # User controllable C preprocessor flags. We set none by default.
@@ -74,6 +74,7 @@ override LDFLAGS += \
     -no-pie \
     --no-dynamic-linker \
     -z text \
+    -z execstack \
     -z max-page-size=0x1000 \
     -T linker.ld
 
@@ -89,13 +90,14 @@ override ASFILES := $(shell cd . && find -L * -type f -name '*.S')
 override NASMFILES := $(shell cd . && find -L * -type f -name '*.asm')
 override OBJ := $(addprefix obj/,$(CFILES:.c=.c.o) $(ASFILES:.S=.S.o) $(NASMFILES:.asm=.asm.o))
 override HEADER_DEPS := $(addprefix obj/,$(CFILES:.c=.c.d) $(ASFILES:.S=.S.d))
+override LIB_DEPS := "kernel/limine.h flanterm/flanterm.h printf/printf.h lai"
 
 # Default target.
 .PHONY: all
 all: bin/$(KERNEL) 
 
 # Link rules for the final kernel executable.
-bin/$(KERNEL): GNUmakefile linker.ld kernel/limine.h flanterm/flanterm.h printf/printf.h $(OBJ) 
+bin/$(KERNEL): GNUmakefile linker.ld kernel/limine.h flanterm/flanterm.h printf/printf.h lai $(OBJ) 
 	mkdir -p "$$(dirname $@)"
 	$(LD) $(OBJ) $(LDFLAGS) -o $@
 
@@ -108,21 +110,24 @@ flanterm/flanterm.h:
 printf/printf.h:
 	git clone https://github.com/mpaland/printf.git
 
+lai:
+	git clone https://github.com/managarm/lai.git
+
 # Include header dependencies.
 -include $(HEADER_DEPS)
 
 # Compilation rules for *.c files.
-obj/%.c.o: %.c GNUmakefile kernel/limine.h flanterm/flanterm.h printf/printf.h 
+obj/%.c.o: %.c GNUmakefile 
 	mkdir -p "$$(dirname $@)"
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 # Compilation rules for *.S files.
-obj/%.S.o: %.S GNUmakefile kernel/limine.h flanterm/flanterm.h printf/printf.h 
+obj/%.S.o: %.S GNUmakefile 
 	mkdir -p "$$(dirname $@)"
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 # Compilation rules for *.asm (nasm) files.
-obj/%.asm.o: %.asm GNUmakefile kernel/limine.h flanterm/flanterm.h printf/printf.h 
+obj/%.asm.o: %.asm GNUmakefile 
 	mkdir -p "$$(dirname $@)"
 	nasm $(NASMFLAGS) $< -o $@
 
@@ -133,4 +138,4 @@ clean:
 
 .PHONY: distclean
 distclean: clean
-	rm -rf limine.h flanterm printf
+	rm -rf limine.h flanterm printf lai
