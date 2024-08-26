@@ -4,44 +4,39 @@
 #include <string.h>
 
 void* linked_list_malloc(physical_memory_allocator_t* allocator, size_t size) {
+	memory_allocation_t* alloc;
 	linked_list_allocator_t* ll_allocator = (linked_list_allocator_t*) allocator;
+	void* addr = (char*) ll_allocator->tail + sizeof(memory_allocation_t);
+
 	if (size + ll_allocator->allocator.memory_used > ll_allocator->allocator.memory_capacity) {
 		return NULL;
 	}
 
-	uint8_t* address = ll_allocator->allocator.base + ll_allocator->block_length * ll_allocator->ptr;
-	ll_allocator->ptr = ll_allocator->free_list[ll_allocator->ptr];
-	return (void*) address;
-}
-
-void linked_list_free(physical_memory_allocator_t* allocator, void* address) {
-	linked_list_allocator_t* ll_allocator = (linked_list_allocator_t*) allocator;
-	uintptr_t diff = (uintptr_t) address - (uintptr_t) ll_allocator->allocator.base;
-
-	bool valid_address = diff % ll_allocator->block_length == 0;
-
-	if (valid_address) {
-		size_t index_to_be_freed = diff / ll_allocator->block_length;
-		size_t tmp = ll_allocator->free_list[ll_allocator->ptr];
-		ll_allocator->free_list[ll_allocator->ptr] = index_to_be_freed;
-		ll_allocator->free_list[index_to_be_freed] = tmp;
-		memset(address, 0, ll_allocator->block_length);
+	if (ll_allocator->tail->next == NULL) {
+		alloc = (char*) ll_allocator->tail + sizeof(memory_allocation_t) + ll_allocator->block_length;
+		alloc->next = NULL;
+		alloc->allocator = ll_allocator;
+		ll_allocator->tail->next = alloc;
+	}  else {
+		alloc = ll_allocator->tail->next;
 	}
+	ll_allocator->tail = alloc;
+	return addr;
 }
 
-void initialize_linked_list_allocator(linked_list_allocator_t* allocator_ptr, size_t capacity, void* base, size_t block_length, size_t* free_list) {
+void linked_list_free(void* address) {
+	memory_allocation_t* alloc = (char*) address - sizeof(memory_allocation_t);
+	linked_list_allocator_t* ll_allocator = alloc->allocator;
+	alloc->next = ll_allocator->tail->next;
+	ll_allocator->tail = alloc;
+}
+
+void initialize_linked_list_allocator(linked_list_allocator_t* allocator_ptr, size_t capacity, void* base, size_t block_length) {
 	initialize_physical_memory_allocator((physical_memory_allocator_t*) allocator_ptr, capacity, linked_list_malloc, linked_list_free, base);
 	allocator_ptr->block_length = block_length;
-	allocator_ptr->ptr = 0;
-	allocator_ptr->free_list = free_list;
+	allocator_ptr->tail = base;
 
-	for (size_t i = 0; i < capacity - 1; i++) {
-		free_list[i] = i + 1;	
-	}
-
-	free_list[capacity - 1] = 0;	
-}
-
-void initialize_linked_list_allocator_aligned(void* base, size_t capacity, size_t block_length) {
-	initialize_linked_list_allocator(base, capacity, base + sizeof(linked_list_allocator_t) + sizeof(size_t) * capacity, block_length, base + sizeof(linked_list_allocator_t));
+	memory_allocation_t* alloc = base;
+	alloc->allocator = allocator_ptr;
+	alloc->next = NULL;
 }

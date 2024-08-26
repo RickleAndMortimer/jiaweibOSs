@@ -1,7 +1,6 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-
 #include "limine.h"
 
 #include "idt/idt.h"
@@ -10,6 +9,7 @@
 #include "gfx/term.h"
 #include "mem/linked_list_allocator.h"
 #include "mem/page_heap.h"
+#include "mem/heap.h"
 
 #include <flanterm/flanterm.h>
 #include <flanterm/backends/fb.h>
@@ -115,20 +115,16 @@ void _start(void) {
     }
 
     uint64_t offset = hhdm_request.response->offset;
-
-    /*
-    linked_list_allocator_t* allocator = (linked_list_allocator_t*) offset + used_entry->base;
-    size_t free_list[30];
-    initialize_linked_list_allocator(allocator, 30, allocator + 1, 32, free_list);
-
-    allocator->allocator.malloc((physical_memory_allocator_t*) allocator, 24);
-    char* g = allocator->allocator.malloc((physical_memory_allocator_t*) allocator, 28);
-    g[0] = 'g';
-    allocator->allocator.malloc((physical_memory_allocator_t*) allocator, 28);
-    */
-
-    initialize_page_heap(offset + used_entry->base, used_entry->length);
-
+    initialize_default_request_heap_sizes(offset + used_entry->base);
+    volatile char* x = linked_list_heap_fast_malloc(24);
+    volatile char* z = linked_list_heap_fast_malloc(32);
+    volatile char* y = linked_list_heap_fast_malloc(48);
+    strcpy(x, "hello");
+    strcpy(z, "jello");
+    strcpy(y, "goodbye");
+    linked_list_free(x);
+    x = linked_list_heap_fast_malloc(24);
+    strcpy(x, "bello");
     struct limine_framebuffer* framebuffer = framebuffer_request.response->framebuffers[0];
     
     // Note: we assume the framebuffer model is RGB with 32-bit pixels.
