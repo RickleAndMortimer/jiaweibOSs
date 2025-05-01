@@ -105,7 +105,7 @@ kernel/limine.h:
 	curl -Lo $@ https://github.com/limine-bootloader/limine/raw/trunk/limine.h
 
 flanterm/flanterm.h:
-	git clone https://github.com/mintsuki/flanterm.git
+	git clone https://codeberg.org/mintsuki/flanterm.git
 
 printf/printf.h:
 	git clone https://github.com/mpaland/printf.git
