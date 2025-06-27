@@ -97,14 +97,14 @@ override LIB_DEPS := "kernel/limine.h flanterm/flanterm.h printf/printf.h lai"
 all: bin/$(KERNEL) 
 
 # Link rules for the final kernel executable.
-bin/$(KERNEL): GNUmakefile linker.ld kernel/limine.h flanterm/flanterm.h printf/printf.h lai $(OBJ) 
+bin/$(KERNEL): GNUmakefile linker.ld kernel/limine.h flanterm printf/printf.h lai $(OBJ) 
 	mkdir -p "$$(dirname $@)"
 	$(LD) $(OBJ) $(LDFLAGS) -o $@
 
 kernel/limine.h:
 	curl -Lo $@ https://github.com/limine-bootloader/limine/raw/trunk/limine.h
 
-flanterm/flanterm.h:
+flanterm:
 	git clone https://codeberg.org/mintsuki/flanterm.git
 
 printf/printf.h:

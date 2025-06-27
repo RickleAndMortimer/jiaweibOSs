@@ -1,8 +1,8 @@
 #ifndef TERM_H
 #define TERM_H
 
-#include <flanterm/flanterm.h>
-#include <flanterm/backends/fb.h>
+#include <flanterm/src/flanterm.h>
+#include <flanterm/src/flanterm_backends/fb.h>
 #include "../limine.h"
 
 static struct flanterm_context* ft_ctx;

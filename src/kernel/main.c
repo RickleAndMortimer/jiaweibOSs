@@ -13,8 +13,8 @@
 #include "mem/heap.h"
 #include "mem/buddy_allocator.h"
 
-#include <flanterm/flanterm.h>
-#include <flanterm/backends/fb.h>
+#include <flanterm/src/flanterm.h>
+#include <flanterm/src/flanterm_backends/fb.h>
 #include <lai/helpers/pm.h>
 #include <printf/printf.h>
 
