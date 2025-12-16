@@ -9,11 +9,10 @@ ENTRY(_start)
 /* MMU permissions */
 PHDRS
 {
-    requests PT_LOAD    FLAGS((1 << 1) | (1 << 2)) ; /* Write + Read */
-    text     PT_LOAD    FLAGS((1 << 0) | (1 << 2)) ; /* Execute + Read */
-    rodata   PT_LOAD    FLAGS((1 << 2)) ;            /* Read only */
-    data     PT_LOAD    FLAGS((1 << 1) | (1 << 2)) ; /* Write + Read */
-    dynamic  PT_DYNAMIC FLAGS((1 << 1) | (1 << 2)) ; /* Dynamic PHDR for relocations */
+    requests PT_LOAD;
+    text     PT_LOAD;  
+    rodata   PT_LOAD;
+    data     PT_LOAD;
 }
 
 SECTIONS
@@ -32,30 +31,32 @@ SECTIONS
     } :requests
 
     /* Move to the next memory page for .text */
-    . += CONSTANT(MAXPAGESIZE);
+    . = ALIGN(CONSTANT(MAXPAGESIZE));
 
     .text : {
         *(.text .text.*)
     } :text
 
     /* Move to the next memory page for .rodata */
-    . += CONSTANT(MAXPAGESIZE);
+    . = ALIGN(CONSTANT(MAXPAGESIZE));
 
     .rodata : {
         *(.rodata .rodata.*)
     } :rodata
 
+
+    /* Add a .note.gnu.build-id output section in case a build ID flag is added to the */
+    /* linker command. */
+    .note.gnu.build-id : {
+        *(.note.gnu.build-id)
+    } :rodata
+
     /* Move to the next memory page for .data */
-    . += CONSTANT(MAXPAGESIZE);
+    . = ALIGN(CONSTANT(MAXPAGESIZE));
 
     .data : {
         *(.data .data.*)
     } :data
-
-    /* Dynamic section for relocations, both in its own PHDR and inside data PHDR */
-    .dynamic : {
-        *(.dynamic)
-    } :data :dynamic
 
     /* NOTE: .bss needs to be the last thing mapped to :data, otherwise lots of */
     /* unnecessary zeros will be written to the binary. */

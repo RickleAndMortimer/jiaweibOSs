@@ -6,6 +6,7 @@
 #include "idt/idt.h"
 #include "drivers/pit.h"
 #include "drivers/pic.h"
+#include "apic/rsdp.h"
 #include "gfx/term.h"
 #include "sys/halt.h"
 #include "mem/linked_list_allocator.h"
@@ -15,62 +16,53 @@
 
 #include <flanterm/src/flanterm.h>
 #include <flanterm/src/flanterm_backends/fb.h>
-#include <lai/helpers/pm.h>
 #include <printf/printf.h>
 
-typedef struct rsdp_t {
- char signature[8];
- uint8_t Checksum;
- char oemid[6];
- uint8_t revision;
- uint32_t rsdt_address;
-}__attribute__ ((packed)) rsdp_t;
-
 __attribute__((used, section(".requests")))
-static volatile LIMINE_BASE_REVISION(2);
+static volatile uint64_t limine_base_revision[] = LIMINE_BASE_REVISION(4);
 
 __attribute__((used, section(".requests")))
 static volatile struct limine_framebuffer_request framebuffer_request = {
-    .id = LIMINE_FRAMEBUFFER_REQUEST,
+    .id = LIMINE_FRAMEBUFFER_REQUEST_ID,
     .revision = 0
 };
 
 __attribute__((used, section(".requests")))
 static volatile struct limine_memmap_request memmap_request = {
-    .id = LIMINE_MEMMAP_REQUEST,
+    .id = LIMINE_MEMMAP_REQUEST_ID,
     .revision = 1
 };
 
 __attribute__((used, section(".requests")))
 static volatile struct limine_hhdm_request hhdm_request = {
-    .id = LIMINE_HHDM_REQUEST,
+    .id = LIMINE_HHDM_REQUEST_ID,
     .revision = 1
 };
 
 __attribute__((used, section(".requests")))
-static volatile struct limine_smp_request smp_request = {
-    .id = LIMINE_SMP_REQUEST,
+static volatile struct limine_mp_request smp_request = {
+    .id = LIMINE_MP_REQUEST_ID,
     .revision = 1
 };
 
 __attribute__((used, section(".requests")))
 static volatile struct limine_stack_size_request stack_size_request = {
-    .id = LIMINE_STACK_SIZE_REQUEST,
+    .id = LIMINE_STACK_SIZE_REQUEST_ID,
     .revision = 1,
     .stack_size = 0x100000
 };
 
 __attribute__((used, section(".requests")))
 static volatile struct limine_rsdp_request rsdp_request = {
-    .id = LIMINE_RSDP_REQUEST,
+    .id = LIMINE_RSDP_REQUEST_ID,
     .revision = 0
 };
 
 __attribute__((used, section(".requests_start_marker")))
-static volatile LIMINE_REQUESTS_START_MARKER;
+static volatile uint64_t limine_requests_start_marker[] = LIMINE_REQUESTS_START_MARKER;
 
 __attribute__((used, section(".requests_end_marker")))
-static volatile LIMINE_REQUESTS_END_MARKER;
+static volatile uint64_t limine_requests_end_marker[] = LIMINE_REQUESTS_END_MARKER;
 
 // Halt and catch fire function.
 static void cpu2_test(void) {
@@ -105,21 +97,9 @@ static void test_interrupts() {
     asm volatile ("int $12;");
 }
 
-static void setup_lai() {
-    // Access RSDP information.
-    if (rsdp_request.response == NULL) {
-        hcf();
-    }
-
-    // Get rsdp address
-    rsdp_t* rsdp = rsdp_request.response->address;
-
-    lai_set_acpi_revision(rsdp->revision);
-    lai_create_namespace();
-}
 
 void _start(void) {
-    if (LIMINE_BASE_REVISION_SUPPORTED == false) {
+    if (LIMINE_BASE_REVISION_SUPPORTED(limine_base_revision) == false) {
         hcf();
     }
 
@@ -179,8 +159,17 @@ void _start(void) {
     ftprint(ft_ctx, msg, sizeof(msg));
     printf("ayo %d", 50);
 
+    setup_apic();
     printf("%d %d %d\n", used_entry->base, used_entry->length, used_entry->type);
 
+
+    // buddy_testing();
+
+    // We're done, just hang...
+    hcf();
+}
+
+void buddy_testing(struct limine_memmap_entry* used_entry) {
     uint64_t offset = hhdm_request.response->offset;
     buddy_allocator_t* alloc = offset + used_entry->base;
     buddy_free_node_t* free_list = (char*) alloc + sizeof(buddy_allocator_t);
@@ -196,6 +185,28 @@ void _start(void) {
     buddy_free(alloc, addd);
     buddy_free(alloc, add);
     buddy_free(alloc, ad);
-    // We're done, just hang...
-    hcf();
+}
+
+void setup_apic() {
+    // Get rsdp address
+    processor_lapic_t* processor_lapic_entries[8];
+    io_apic_entry_t* io_apic_entries[8];
+    io_apic_interrupt_source_override_t* io_apic_interrupt_source_override_entries[8];
+    io_apic_non_maskable_interrupt_source_entry_t* io_apic_non_maskable_interrupt_source_entries[8];
+    lapic_non_maskable_interrupt_t* lapic_non_maskable_interrupt_entries[8];
+    lapic_address_override_t* lapic_address_override_entries[8];
+    processor_local_x2apic_t* processor_local_x2apic_entries[8];
+    xsdp_t* xsdp = rsdp_request.response->address;
+    madt_t* madt = find_acpi_descriptor_table(xsdp->xsdt_address, "apic");
+
+    parse_madt_entries(madt, 
+		       processor_lapic_entries, 
+		       io_apic_entries, 
+		       io_apic_interrupt_source_override_entries, 
+		       io_apic_non_maskable_interrupt_source_entries,
+		       lapic_non_maskable_interrupt_entries,
+		       lapic_address_override_entries,
+		       processor_local_x2apic_entries);
+    printf("finished parsing entries\n");
+    printf("%d \n", processor_lapic_entries[0]->apic_id);
 }

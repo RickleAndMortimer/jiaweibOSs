@@ -26,7 +26,7 @@ override DEFAULT_LD := ld
 $(eval $(call DEFAULT_VAR,LD,$(DEFAULT_LD)))
 
 # User controllable C flags.
-override DEFAULT_CFLAGS := -g -O2 -pipe -Isys/ -Ilib/ -Ikernel/ -Iflanterm/ -Iprintf/ -Ilai/include -DPRINTF_DISABLE_SUPPORT_FLOAT
+override DEFAULT_CFLAGS := -g -O2 -pipe -Isys/ -Ilib/ -Ikernel/ -Iflanterm/ -Iprintf/ -DPRINTF_DISABLE_SUPPORT_FLOAT
 $(eval $(call DEFAULT_VAR,CFLAGS,$(DEFAULT_CFLAGS)))
 
 # User controllable C preprocessor flags. We set none by default.
@@ -90,19 +90,19 @@ override ASFILES := $(shell cd . && find -L * -type f -name '*.S')
 override NASMFILES := $(shell cd . && find -L * -type f -name '*.asm')
 override OBJ := $(addprefix obj/,$(CFILES:.c=.c.o) $(ASFILES:.S=.S.o) $(NASMFILES:.asm=.asm.o))
 override HEADER_DEPS := $(addprefix obj/,$(CFILES:.c=.c.d) $(ASFILES:.S=.S.d))
-override LIB_DEPS := "kernel/limine.h flanterm/flanterm.h printf/printf.h lai"
+override LIB_DEPS := "kernel/limine.h flanterm/flanterm.h printf/printf.h"
 
 # Default target.
 .PHONY: all
 all: bin/$(KERNEL) 
 
 # Link rules for the final kernel executable.
-bin/$(KERNEL): GNUmakefile linker.ld kernel/limine.h flanterm printf/printf.h lai $(OBJ) 
+bin/$(KERNEL): GNUmakefile linker.ld kernel/limine.h flanterm printf/printf.h $(OBJ) 
 	mkdir -p "$$(dirname $@)"
 	$(LD) $(OBJ) $(LDFLAGS) -o $@
 
 kernel/limine.h:
-	curl -Lo $@ https://github.com/limine-bootloader/limine/raw/trunk/limine.h
+	curl -Lo $@ https://codeberg.org/Limine/limine-protocol/raw/branch/trunk/include/limine.h
 
 flanterm:
 	git clone https://codeberg.org/mintsuki/flanterm.git
@@ -110,8 +110,6 @@ flanterm:
 printf/printf.h:
 	git clone https://github.com/mpaland/printf.git
 
-lai:
-	git clone https://github.com/managarm/lai.git
 
 # Include header dependencies.
 -include $(HEADER_DEPS)
@@ -138,4 +136,4 @@ clean:
 
 .PHONY: distclean
 distclean: clean
-	rm -rf limine.h flanterm printf lai
+	rm -rf limine.h flanterm printf
