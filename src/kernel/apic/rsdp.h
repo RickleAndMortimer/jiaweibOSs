@@ -6,7 +6,7 @@ typedef struct rsdp_t {
   char oem_id[6];
   uint8_t revision;
   uint32_t rsdt_address;
-} rsdp_t __attribute__ ((packed));
+} rsdp_t;
 
 typedef struct xsdp_t {
   rsdp_t rsdp;
@@ -14,7 +14,7 @@ typedef struct xsdp_t {
   uint64_t xsdt_address;
   uint8_t extended_checksum;
   uint8_t reserved[3];
-} xsdp_t __attribute__ ((packed));
+} xsdp_t;
 
 typedef struct xsdt_header_t {
   char signature[4];
@@ -26,7 +26,7 @@ typedef struct xsdt_header_t {
   uint32_t oem_revision;
   uint32_t creator_id;
   uint32_t creator_revision;
-} xsdt_header_t __attribute__ ((packed));
+} xsdt_header_t;
 
 typedef struct xsdt_t {
   xsdt_header_t xsdt_header;

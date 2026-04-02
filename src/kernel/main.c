@@ -19,7 +19,7 @@
 #include <printf/printf.h>
 
 __attribute__((used, section(".requests")))
-static volatile uint64_t limine_base_revision[] = LIMINE_BASE_REVISION(4);
+static volatile uint64_t limine_base_revision[] = LIMINE_BASE_REVISION(0);
 
 __attribute__((used, section(".requests")))
 static volatile struct limine_framebuffer_request framebuffer_request = {
@@ -159,7 +159,7 @@ void _start(void) {
     ftprint(ft_ctx, msg, sizeof(msg));
     printf("ayo %d", 50);
 
-    setup_apic();
+    // setup_apic();
     printf("%d %d %d\n", used_entry->base, used_entry->length, used_entry->type);
 
 
