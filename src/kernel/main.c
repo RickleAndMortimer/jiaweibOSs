@@ -9,6 +9,7 @@
 #include "apic/rsdp.h"
 #include "gfx/term.h"
 #include "sys/halt.h"
+#include "pci/pci.h"
 #include "mem/linked_list_allocator.h"
 #include "mem/page_heap.h"
 #include "mem/heap.h"
@@ -46,9 +47,7 @@ static volatile struct limine_mp_request smp_request = {
 };
 
 __attribute__((used, section(".requests")))
-static volatile struct limine_stack_size_request stack_size_request = {
-    .id = LIMINE_STACK_SIZE_REQUEST_ID,
-    .revision = 1,
+static volatile struct limine_stack_size_request stack_size_request = { .id = LIMINE_STACK_SIZE_REQUEST_ID, .revision = 1,
     .stack_size = 0x100000
 };
 
@@ -165,6 +164,9 @@ void _start(void) {
 
     // buddy_testing();
 
+    uint16_t device_id = pci_config_read_word(0, 3, 0, 0);
+    uint16_t vendor_id = pci_config_read_word(0, 3, 0, 2);
+    printf("%d %d\n", device_id, vendor_id);
     // We're done, just hang...
     hcf();
 }

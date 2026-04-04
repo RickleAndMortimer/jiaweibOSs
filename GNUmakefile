@@ -51,7 +51,10 @@ edk2-ovmf:
 
 .PHONY: debug-uefi
 debug-uefi: $(IMAGE_NAME).iso
-	qemu-system-x86_64 -M q35 -m 2G -s -S -bios -smp 2 ovmf/OVMF.fd -cdrom $(IMAGE_NAME).iso -boot d
+	qemu-system-x86_64 -M q35 -m 2G -s -S -drive if=pflash,unit=0,format=raw,file=ovmf/OVMF.fd,readonly=on \
+    -drive file=foobar.raw,if=none,id=nvme0 \
+		-device nvme,drive=nvme0,serial=1234 \
+	  -cdrom $(IMAGE_NAME).iso -boot d
 
 .PHONY: run-hdd
 run-hdd: $(IMAGE_NAME).hdd

@@ -50,7 +50,6 @@ static buddy_free_node_t* parent(buddy_allocator_t* alloc, buddy_free_node_t* no
 	return alloc->free_list + (node->index - 1) / 2;
 }
 
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
 void* buddy_alloc(buddy_allocator_t* alloc, size_t request_size) {
 	size_t alloc_size = request_size;
 	buddy_free_node_t* node = alloc->free_list;
